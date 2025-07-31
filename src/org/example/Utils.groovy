@@ -7,9 +7,10 @@ class Utils implements Serializable {
         this.steps = steps
     }
 
-    def loadConfig(String path) {
-        def props = steps.readProperties(file: path)
+    def loadConfig(String resourcePath) {
+        def content = steps.libraryResource(resourcePath)
+        def props = new Properties()
+        props.load(new StringReader(content))
         return props
     }
 }
-
