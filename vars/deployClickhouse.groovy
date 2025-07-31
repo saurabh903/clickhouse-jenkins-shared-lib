@@ -1,6 +1,7 @@
-def call(String configPath = "resources/deployClickhouse/config.properties") {
+def call(String configPath = "deployClickhouse/config.properties") {
     def utils = new org.example.Utils(this)
     def config = utils.loadConfig(configPath)
+
 
     stage('Clone Repo') {
         checkout scm
