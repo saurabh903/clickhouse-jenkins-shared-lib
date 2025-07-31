@@ -1,26 +1,46 @@
-def call(String configPath = "deployClickhouse/config.properties") {
-    def utils = new org.example.Utils(this)
-    def config = utils.loadConfig(configPath)
+def call() {
+    pipeline {
+        agent any
 
+        stages {
+            stage('Deploy ClickHouse') {
+                steps {
+                    script {
+                        def config = readProperties file: 'resources/deployClickhouse/config.properties'
+                        echo "Slack Channel: ${config.SLACK_CHANNEL_NAME}"
+                        echo "Environment: ${config.ENVIRONMENT}"
+                    }
+                }
+            }
 
-    stage('Clone Repo') {
-        checkout scm
-    }
+            stage('Clone Repo') {
+                steps {
+                    echo 'Cloning repo...'
+                    // Simulate clone logic
+                }
+            }
 
-    if (config.KEEP_APPROVAL_STAGE?.toBoolean()) {
-        stage('User Approval') {
-            input message: "Do you want to proceed with ${config.ENVIRONMENT} deployment?", ok: "Yes"
+            stage('User Approval') {
+                steps {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        input message: 'Do you want to proceed with deployment?'
+                    }
+                }
+            }
+
+            stage('Run Playbook') {
+                steps {
+                    echo 'Running Ansible playbook...'
+                    // Run your Ansible playbook here
+                }
+            }
+
+            stage('Notify') {
+                steps {
+                    echo "Sending notification to Slack channel: ${config.SLACK_CHANNEL_NAME}"
+                    // Slack notification logic
+                }
+            }
         }
     }
-
-    stage('Run Ansible Playbook') {
-        sh """
-            ansible-playbook ${config.CODE_BASE_PATH}/clickhouse-deploy.yml -e env=${config.ENVIRONMENT}
-        """
-    }
-
-    stage('Notify') {
-        slackSend(channel: "#${config.SLACK_CHANNEL_NAME}", message: "${config.ACTION_MESSAGE}")
-    }
 }
-
